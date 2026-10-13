@@ -17,8 +17,8 @@ const loops = [];
 const mobileQuery = window.matchMedia("(max-width: 800px)");
 const reducedQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 const SPEEDS = [22 * 0.9, -22, 22 * 1.1];
-const RESUME_DELAY = 2500;
-const EASE_TIME = 1200;
+const RESUME_DELAY = 250;
+const EASE_TIME = 500;
 
 function makeTile(item, index, list, label) {
   const tile = document.createElement("button");
@@ -142,7 +142,7 @@ function setupLoop(scroller, list, label, speed) {
   scroller.addEventListener("touchmove", () => interact(loop), { passive: true });
   scroller.addEventListener("pointerdown", () => interact(loop));
   scroller.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") loop.hover = true; });
-  scroller.addEventListener("pointerleave", () => { if (loop.hover) { loop.hover = false; interact(loop); } });
+  scroller.addEventListener("pointerleave", () => { loop.hover = false; });
   loops.push(loop);
   buildCopies(loop);
 }
@@ -156,7 +156,7 @@ function tick(now) {
     if (!loop.copyHeight) continue;
     const idle = now - loop.lastInteract;
     let target = 0;
-    if (allowed && !loop.hover && idle > RESUME_DELAY) {
+    if (allowed && idle > RESUME_DELAY) {
       target = loop.speed * Math.min(1, (idle - RESUME_DELAY) / EASE_TIME);
     }
     loop.current = target;

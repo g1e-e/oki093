@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>oki093 admin</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script type="module" src="src/admin.js"></script>
+</head>
+<body>
+<header class="site"><h1>oki093</h1></header>
+<div class="admin">
+  <div id="notConnected" class="notice hidden">The admin page isn't connected yet. Add the Apps Script URL to config.js.</div>
+  <section id="login" class="panel hidden">
+    <h2>Admin</h2>
+    <form id="loginForm" class="row">
+      <input id="password" type="password" placeholder="Password" autocomplete="current-password" required>
+      <button class="primary" type="submit">Unlock</button>
+    </form>
+    <p id="loginStatus" class="status"></p>
+  </section>
+  <div id="dash" class="hidden">
+    <section class="panel">
+      <div class="row" style="justify-content: space-between">
+        <h2 style="margin:0">Upload</h2>
+        <div class="row"><a href="./">View site</a><button id="logout" type="button">Lock</button></div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <label for="category">Category</label>
+        <select id="category"></select>
+      </div>
+      <div id="drop" class="drop">Drag images here, or click to choose files</div>
+      <input id="picker" type="file" accept="image/*" multiple class="hidden">
+      <div id="pending" class="pending"></div>
+      <div class="row">
+        <button id="uploadBtn" class="primary" type="button" disabled>Upload</button>
+        <button id="clearBtn" type="button" disabled>Clear</button>
+      </div>
+      <div class="progress"><div id="bar"></div></div>
+      <p id="uploadStatus" class="status"></p>
+    </section>
+    <section class="panel">
+      <div class="row" style="justify-content: space-between">
+        <h2 style="margin:0">Gallery</h2>
+        <button id="refresh" type="button">Refresh</button>
+      </div>
+      <p id="listStatus" class="status"></p>
+      <div id="items"></div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

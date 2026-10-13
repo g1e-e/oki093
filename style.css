@@ -1,0 +1,50 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #000; color: #e8e8e8; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+a { color: inherit; }
+header.site { text-align: center; padding: 48px 16px 28px; }
+header.site h1 { margin: 0; font-weight: 200; letter-spacing: 0.45em; font-size: clamp(28px, 5vw, 52px); text-indent: 0.45em; }
+.notice { text-align: center; color: #888; padding: 40px 16px; font-size: 15px; line-height: 1.6; }
+.notice.error { color: #e08a8a; }
+.columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; padding: 0 28px 64px; max-width: 1600px; margin: 0 auto; }
+.column h2 { font-weight: 300; font-size: 13px; letter-spacing: 0.3em; text-transform: uppercase; text-align: center; color: #aaa; margin: 0 0 20px; padding-bottom: 14px; border-bottom: 1px solid #1c1c1c; }
+.column .empty { text-align: center; color: #555; font-size: 14px; padding: 30px 0; }
+.tile { display: block; width: 100%; margin: 0 0 22px; padding: 0; border: 0; background: #0a0a0a; cursor: zoom-in; overflow: hidden; }
+.tile img { display: block; width: 100%; height: auto; opacity: 0; transition: opacity 0.5s ease, transform 0.6s ease; }
+.tile img.loaded { opacity: 1; }
+.tile:hover img { transform: scale(1.02); }
+.tile .caption { display: block; text-align: left; color: #888; font-size: 12px; letter-spacing: 0.05em; padding: 8px 2px 0; background: #000; }
+.lightbox { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.94); display: none; align-items: center; justify-content: center; z-index: 50; }
+.lightbox.open { display: flex; }
+.lightbox figure { margin: 0; max-width: 92vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; }
+.lightbox img { max-width: 92vw; max-height: 84vh; object-fit: contain; }
+.lightbox figcaption { color: #aaa; font-size: 13px; margin-top: 12px; letter-spacing: 0.05em; }
+.lb-btn { position: absolute; background: none; border: 0; color: #ccc; font-size: 34px; cursor: pointer; padding: 14px 18px; line-height: 1; }
+.lb-btn:hover { color: #fff; }
+.lb-close { top: 10px; right: 14px; }
+.lb-prev { left: 8px; top: 50%; transform: translateY(-50%); }
+.lb-next { right: 8px; top: 50%; transform: translateY(-50%); }
+@media (max-width: 800px) {
+  .columns { grid-template-columns: 1fr; gap: 40px; padding: 0 16px 48px; }
+}
+.admin { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
+.panel { border: 1px solid #1f1f1f; border-radius: 8px; padding: 22px; margin-bottom: 26px; background: #070707; }
+.panel h2 { margin: 0 0 16px; font-weight: 300; letter-spacing: 0.15em; font-size: 16px; text-transform: uppercase; }
+input, select, button { font: inherit; color: #eee; background: #111; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; }
+button { cursor: pointer; }
+button:hover:not(:disabled) { border-color: #777; }
+button:disabled { opacity: 0.45; cursor: default; }
+button.primary { background: #eee; color: #000; border-color: #eee; }
+button.danger { color: #e08a8a; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.drop { border: 1px dashed #444; border-radius: 8px; padding: 34px; text-align: center; color: #888; margin: 14px 0; cursor: pointer; }
+.drop.over { border-color: #ddd; color: #ddd; }
+.pending { display: grid; gap: 10px; margin: 12px 0; }
+.pending-item, .item { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; border: 1px solid #1a1a1a; border-radius: 6px; padding: 8px; }
+.pending-item img, .item img { width: 64px; height: 64px; object-fit: cover; border-radius: 4px; background: #111; }
+.pending-item input, .item input.title { flex: 1; min-width: 140px; }
+.status { font-size: 13px; color: #999; min-height: 18px; }
+.status.error { color: #e08a8a; }
+.progress { width: 100%; height: 4px; background: #1a1a1a; border-radius: 2px; overflow: hidden; margin-top: 10px; }
+.progress div { height: 100%; width: 0; background: #ddd; transition: width 0.2s; }
+.cat-head { font-size: 13px; letter-spacing: 0.25em; text-transform: uppercase; color: #aaa; margin: 22px 0 10px; }
+.hidden { display: none !important; }

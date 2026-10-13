@@ -130,14 +130,14 @@ function interact(loop) {
 }
 
 function setupLoop(scroller, list, label, speed) {
-  const loop = { scroller, list, label, speed, copies: 1, copyHeight: 0, pos: 0, hover: false, lastInteract: -Infinity, current: 0 };
+  const loop = { scroller, list, label, speed, copies: 1, copyHeight: 0, pos: 0, hover: false, vel: 0, lastInteract: -Infinity, current: 0 };
   scroller.addEventListener("scroll", () => {
     if (!loop.copyHeight) return;
     if (Math.abs(scroller.scrollTop - loop.pos) > 1.5) loop.lastInteract = performance.now();
     loop.pos = scroller.scrollTop;
     wrap(loop);
   }, { passive: true });
-  scroller.addEventListener("wheel", () => interact(loop), { passive: true });
+  scroller.addEventListener("wheel", (e) => { if (!loopActive() || !loop.copyHeight) { interact(loop); return; } e.preventDefault(); const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? scroller.clientHeight : 1; loop.vel += e.deltaY * unit * 9; loop.vel = Math.max(-6000, Math.min(6000, loop.vel)); loop.pos = scroller.scrollTop; loop.lastInteract = performance.now(); }, { passive: false });
   scroller.addEventListener("touchstart", () => interact(loop), { passive: true });
   scroller.addEventListener("touchmove", () => interact(loop), { passive: true });
   scroller.addEventListener("pointerdown", () => interact(loop));
@@ -154,6 +154,17 @@ function tick(now) {
   const allowed = loopActive() && !reducedQuery.matches && !lightbox.classList.contains("open") && !document.hidden;
   for (const loop of loops) {
     if (!loop.copyHeight) continue;
+    if (Math.abs(loop.vel) > 4) {
+      loop.pos += loop.vel * dt;
+      loop.vel *= Math.exp(-dt * 3.2);
+      loop.lastInteract = now;
+      const ws = loop.scroller;
+      const w = Math.round(loop.pos);
+      if (w !== ws.scrollTop) ws.scrollTop = w;
+      wrap(loop);
+      continue;
+    }
+    loop.vel = 0;
     const idle = now - loop.lastInteract;
     let target = 0;
     if (allowed && idle > RESUME_DELAY) {

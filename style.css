@@ -55,13 +55,13 @@ body.gallery .column { display: flex; flex-direction: column; min-height: 0; hei
 body.gallery .column h2 { flex: 0 0 auto; }
 .scroller { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; padding: 30vh 6% 30vh; -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%); }
 .scroller::-webkit-scrollbar { display: none; }
-.scroller .tile { transform: scale(var(--s, 1)); opacity: var(--o, 1); box-shadow: 0 0 0 rgba(0, 0, 0, 0); transition: transform 0.25s ease-out, opacity 0.25s ease-out, box-shadow 0.35s ease; will-change: transform, opacity; transform-origin: center; overflow: visible; }
-.scroller .tile.focus { box-shadow: 0 18px 50px rgba(255, 255, 255, 0.07), 0 8px 24px rgba(0, 0, 0, 0.9); position: relative; z-index: 1; }
+.scroller .tile { position: relative; transition: transform 0.2s ease, box-shadow 0.2s ease; transform-origin: center; overflow: visible; }
+@media (hover: hover) { .scroller .tile:hover { transform: scale(1.08); z-index: 2; box-shadow: 0 18px 50px rgba(255, 255, 255, 0.07), 0 8px 24px rgba(0, 0, 0, 0.9); } .scroller .tile:hover img { transform: none; } }
 .scroller .tile img { overflow: hidden; }
 @media (max-width: 800px) {
   body.gallery { height: auto; overflow: auto; display: block; }
   body.gallery .column { height: auto; }
   .scroller { overflow: visible; padding: 0; -webkit-mask-image: none; mask-image: none; }
   .scroller .tile { transform: none; opacity: 1; }
-  .scroller .tile.focus { box-shadow: none; }
+  @media (hover: hover) { .scroller .tile:hover { transform: scale(1.08); z-index: 2; box-shadow: 0 18px 50px rgba(255, 255, 255, 0.07), 0 8px 24px rgba(0, 0, 0, 0.9); } .scroller .tile:hover img { transform: none; } }
 }

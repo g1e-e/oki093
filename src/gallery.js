@@ -92,6 +92,7 @@ function measure(loop) {
   }
   const old = loop.copyHeight;
   loop.copyHeight = h;
+  loop.scroller.querySelectorAll(".tile").forEach((t) => { if (t._a) setAmount(t, t._a); });
   if (!old) {
     s.scrollTop = h;
     loop.pos = h;
@@ -115,20 +116,90 @@ function wrap(loop) {
   const s = loop.scroller;
   const max = s.scrollHeight - s.clientHeight;
   let top = s.scrollTop;
-  if (top < h * 0.5) top += h;
-  else if (top > h * 1.5 && top + h <= max + 1) top -= h;
-  else if (top > max - 2) top -= h;
-  if (top !== s.scrollTop) {
-    const delta = top - s.scrollTop;
-    const popped = s.querySelector(".tile.popped");
+  let delta = 0;
+  if (top < h * 0.5) delta = h;
+  else if (top > h * 1.5 && top + h <= max + 1) delta = -h;
+  else if (top > max - 2) delta = -h;
+  if (!delta) return;
+  const tiles = Array.from(s.querySelectorAll(".tile"));
+  const per = loop.list.length;
+  const shift = delta > 0 ? per : -per;
+  const active = tiles.filter((t) => t._a > 0 || t === loop.hoverTile);
+  if (!active.length || active.some((t) => !tiles[tiles.indexOf(t) + shift])) {
     loop.pos += delta;
-    s.scrollTop = top;
-    if (popped) {
-      const tiles = Array.from(s.querySelectorAll(".tile"));
-      const per = tiles.length / Math.max(1, s.querySelectorAll(".loop-copy").length);
-      const idx = tiles.indexOf(popped) + (delta > 0 ? per : -per);
-      if (tiles[idx]) popTile(tiles[idx], true);
-    }
+    s.scrollTop = top + delta;
+    return;
+  }
+  const anchor = popAnchor(loop, tiles);
+  const rel = anchor.offsetTop - top;
+  const amounts = active.map((t) => [tiles.indexOf(t) + shift, t._a || 0]);
+  active.forEach((t) => setAmount(t, 0));
+  amounts.forEach(([i, a]) => setAmount(tiles[i], a));
+  if (loop.hoverTile) loop.hoverTile = tiles[tiles.indexOf(loop.hoverTile) + shift];
+  const newAnchor = tiles[tiles.indexOf(anchor) + shift];
+  const newTop = newAnchor.offsetTop - rel;
+  loop.pos += newTop - top;
+  s.scrollTop = newTop;
+}
+
+const POP_EXTRA = 0.65;
+const POP_TIME = 0.25;
+let mouseX = null;
+let mouseY = null;
+
+function setAmount(tile, a) {
+  tile._a = a;
+  if (a <= 0.0005) {
+    tile._a = 0;
+    tile.style.transform = "";
+    tile.style.marginTop = "";
+    tile.style.marginBottom = "";
+    tile.classList.remove("popped");
+    return;
+  }
+  const m = POP_EXTRA * tile.offsetHeight / 2 * a;
+  tile.style.transform = `scale(${1 + POP_EXTRA * a})`;
+  tile.style.marginTop = `${m}px`;
+  tile.style.marginBottom = `${m}px`;
+  tile.classList.toggle("popped", a > 0.5);
+}
+
+function popAnchor(loop, tiles) {
+  if (loop.hoverTile) return loop.hoverTile;
+  let best = null;
+  for (const t of tiles) if (t._a > 0 && (!best || t._a > best._a)) best = t;
+  return best;
+}
+
+function updateHover() {
+  let tile = null;
+  if (mouseX !== null && loopActive()) {
+    const el = document.elementFromPoint(mouseX, mouseY);
+    tile = el && el.closest ? el.closest(".scroller .tile") : null;
+  }
+  for (const loop of loops) loop.hoverTile = tile && loop.scroller.contains(tile) ? tile : null;
+}
+
+function popStep(loop, dt) {
+  const s = loop.scroller;
+  const tiles = Array.from(s.querySelectorAll(".tile"));
+  const active = tiles.filter((t) => t._a > 0 || t === loop.hoverTile);
+  if (!active.length) return;
+  const anchor = popAnchor(loop, tiles);
+  const before = anchor.offsetTop;
+  const top = s.scrollTop;
+  const k = Math.min(1, dt / POP_TIME * 1.6);
+  for (const t of active) {
+    const goal = t === loop.hoverTile ? 1 : 0;
+    let a = (t._a || 0) + (goal - (t._a || 0)) * (1 - Math.pow(1 - k, 2));
+    if (Math.abs(goal - a) < 0.002) a = goal;
+    if (dt === 0 && reducedQuery.matches) a = goal;
+    setAmount(t, a);
+  }
+  const diff = anchor.offsetTop - before;
+  if (diff) {
+    loop.pos += diff;
+    s.scrollTop = top + diff;
   }
 }
 
@@ -138,16 +209,16 @@ function interact(loop) {
 }
 
 function setupLoop(scroller, list, label, speed) {
-  const loop = { scroller, list, label, speed, copies: 1, copyHeight: 0, pos: 0, hover: false, vel: 0, lastInteract: -Infinity, current: 0 };
+  const loop = { scroller, base: Math.abs(speed), hoverTile: null, list, label, speed, copies: 1, copyHeight: 0, pos: 0, hover: false, vel: 0, lastInteract: -Infinity, current: 0 };
   scroller.addEventListener("scroll", () => {
     if (!loop.copyHeight) return;
     if (Math.abs(scroller.scrollTop - loop.pos) > 1.5) loop.lastInteract = performance.now();
     loop.pos = scroller.scrollTop;
     wrap(loop);
   }, { passive: true });
-  scroller.addEventListener("wheel", (e) => { if (!loopActive() || !loop.copyHeight) { interact(loop); return; } e.preventDefault(); const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? scroller.clientHeight : 1; loop.vel += e.deltaY * unit * 9; loop.vel = Math.max(-6000, Math.min(6000, loop.vel)); loop.pos = scroller.scrollTop; loop.lastInteract = performance.now(); }, { passive: false });
-  scroller.addEventListener("touchstart", () => interact(loop), { passive: true });
-  scroller.addEventListener("touchmove", () => interact(loop), { passive: true });
+  scroller.addEventListener("wheel", (e) => { if (!loopActive() || !loop.copyHeight) { interact(loop); return; } e.preventDefault(); const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? scroller.clientHeight : 1; if (e.deltaY) loop.speed = Math.sign(e.deltaY) * loop.base; loop.vel += e.deltaY * unit * 9; loop.vel = Math.max(-6000, Math.min(6000, loop.vel)); loop.pos = scroller.scrollTop; loop.lastInteract = performance.now(); }, { passive: false });
+  scroller.addEventListener("touchstart", (e) => { loop.touchY = e.touches[0].clientY; interact(loop); }, { passive: true });
+  scroller.addEventListener("touchmove", (e) => { const y = e.touches[0].clientY; if (loop.touchY != null && y !== loop.touchY) loop.speed = Math.sign(loop.touchY - y) * loop.base; loop.touchY = y; interact(loop); }, { passive: true });
   scroller.addEventListener("pointerdown", () => interact(loop));
   scroller.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") loop.hover = true; });
   scroller.addEventListener("pointerleave", () => { loop.hover = false; });
@@ -159,6 +230,7 @@ let lastFrame = 0;
 function tick(now) {
   const dt = lastFrame ? Math.min((now - lastFrame) / 1000, 0.1) : 0;
   lastFrame = now;
+  updateHover();
   const allowed = loopActive() && !reducedQuery.matches && !lightbox.classList.contains("open") && !document.hidden;
   for (const loop of loops) {
     if (!loop.copyHeight) continue;
@@ -170,6 +242,8 @@ function tick(now) {
       const w = Math.round(loop.pos);
       if (w !== ws.scrollTop) ws.scrollTop = w;
       wrap(loop);
+      updateHover();
+      popStep(loop, dt);
       continue;
     }
     loop.vel = 0;
@@ -180,12 +254,14 @@ function tick(now) {
       target = loop.speed * Math.min(1, (idle - RESUME_DELAY) / EASE_TIME);
     }
     loop.current = target;
-    if (!target) continue;
+    if (!target) { popStep(loop, dt); continue; }
     loop.pos += target * dt;
     const s = loop.scroller;
     const whole = Math.round(loop.pos);
     if (whole !== s.scrollTop) s.scrollTop = whole;
     wrap(loop);
+    updateHover();
+    popStep(loop, dt);
   }
   requestAnimationFrame(tick);
 }
@@ -282,35 +358,15 @@ async function load() {
 
 load();
 
-const POP_SCALE = 1.65;
+document.addEventListener("pointermove", (e) => {
+  if (e.pointerType && e.pointerType !== "mouse") { mouseX = null; mouseY = null; return; }
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+});
 document.addEventListener("pointerover", (e) => {
   if (e.pointerType && e.pointerType !== "mouse") return;
-  const tile = e.target.closest && e.target.closest(".scroller .tile");
-  if (!tile || tile.classList.contains("popped")) return;
-  popTile(tile, false);
+  mouseX = e.clientX;
+  mouseY = e.clientY;
 });
-function popTile(tile, instant) {
-  const scroller = tile.closest(".scroller");
-  const tiles = scroller.querySelectorAll(".tile");
-  if (instant) tiles.forEach((t) => { t.style.transition = "none"; });
-  const extra = (POP_SCALE - 1) * tile.offsetHeight / 2;
-  let before = true;
-  tiles.forEach((t) => {
-    t.classList.remove("popped");
-    if (t === tile) { before = false; t.classList.add("popped"); t.style.transform = ""; return; }
-    t.style.transform = `translateY(${before ? -extra : extra}px)`;
-  });
-  if (instant) { void scroller.offsetHeight; tiles.forEach((t) => { t.style.transition = ""; }); }
-}
-document.addEventListener("pointerout", (e) => {
-  const tile = e.target.closest && e.target.closest(".scroller .tile");
-  if (!tile) return;
-  if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
-  const next = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".scroller .tile");
-  if (next && next !== tile && next.classList.contains("popped")) return;
-  clearPop(tile.closest(".scroller"));
-});
-function clearPop(scroller) {
-  if (!scroller) return;
-  scroller.querySelectorAll(".tile").forEach((t) => { t.classList.remove("popped"); t.style.transform = ""; });
-}
+document.documentElement.addEventListener("pointerleave", () => { mouseX = null; mouseY = null; });
+window.addEventListener("blur", () => { mouseX = null; mouseY = null; });

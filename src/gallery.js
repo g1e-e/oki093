@@ -272,3 +272,28 @@ async function load() {
 }
 
 load();
+
+const POP_SCALE = 1.65;
+document.addEventListener("pointerover", (e) => {
+  if (e.pointerType && e.pointerType !== "mouse") return;
+  const tile = e.target.closest && e.target.closest(".scroller .tile");
+  if (!tile || tile.classList.contains("popped")) return;
+  const scroller = tile.closest(".scroller");
+  clearPop(scroller);
+  const extra = (POP_SCALE - 1) * tile.offsetHeight / 2;
+  let before = true;
+  scroller.querySelectorAll(".tile").forEach((t) => {
+    if (t === tile) { before = false; t.classList.add("popped"); return; }
+    t.style.transform = `translateY(${before ? -extra : extra}px)`;
+  });
+});
+document.addEventListener("pointerout", (e) => {
+  const tile = e.target.closest && e.target.closest(".scroller .tile");
+  if (!tile) return;
+  if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
+  clearPop(tile.closest(".scroller"));
+});
+function clearPop(scroller) {
+  if (!scroller) return;
+  scroller.querySelectorAll(".tile").forEach((t) => { t.classList.remove("popped"); t.style.transform = ""; });
+}

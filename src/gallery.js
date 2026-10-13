@@ -119,8 +119,16 @@ function wrap(loop) {
   else if (top > h * 1.5 && top + h <= max + 1) top -= h;
   else if (top > max - 2) top -= h;
   if (top !== s.scrollTop) {
-    loop.pos += top - s.scrollTop;
+    const delta = top - s.scrollTop;
+    const popped = s.querySelector(".tile.popped");
+    loop.pos += delta;
     s.scrollTop = top;
+    if (popped) {
+      const tiles = Array.from(s.querySelectorAll(".tile"));
+      const per = tiles.length / Math.max(1, s.querySelectorAll(".loop-copy").length);
+      const idx = tiles.indexOf(popped) + (delta > 0 ? per : -per);
+      if (tiles[idx]) popTile(tiles[idx], true);
+    }
   }
 }
 
@@ -279,19 +287,27 @@ document.addEventListener("pointerover", (e) => {
   if (e.pointerType && e.pointerType !== "mouse") return;
   const tile = e.target.closest && e.target.closest(".scroller .tile");
   if (!tile || tile.classList.contains("popped")) return;
+  popTile(tile, false);
+});
+function popTile(tile, instant) {
   const scroller = tile.closest(".scroller");
-  clearPop(scroller);
+  const tiles = scroller.querySelectorAll(".tile");
+  if (instant) tiles.forEach((t) => { t.style.transition = "none"; });
   const extra = (POP_SCALE - 1) * tile.offsetHeight / 2;
   let before = true;
-  scroller.querySelectorAll(".tile").forEach((t) => {
-    if (t === tile) { before = false; t.classList.add("popped"); return; }
+  tiles.forEach((t) => {
+    t.classList.remove("popped");
+    if (t === tile) { before = false; t.classList.add("popped"); t.style.transform = ""; return; }
     t.style.transform = `translateY(${before ? -extra : extra}px)`;
   });
-});
+  if (instant) { void scroller.offsetHeight; tiles.forEach((t) => { t.style.transition = ""; }); }
+}
 document.addEventListener("pointerout", (e) => {
   const tile = e.target.closest && e.target.closest(".scroller .tile");
   if (!tile) return;
   if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
+  const next = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".scroller .tile");
+  if (next && next !== tile && next.classList.contains("popped")) return;
   clearPop(tile.closest(".scroller"));
 });
 function clearPop(scroller) {

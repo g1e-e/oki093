@@ -165,6 +165,7 @@ function tick(now) {
       continue;
     }
     loop.vel = 0;
+    if (loop.scroller.querySelector(".tile.popped")) loop.lastInteract = Math.max(loop.lastInteract, now - RESUME_DELAY);
     const idle = now - loop.lastInteract;
     let target = 0;
     if (allowed && idle > RESUME_DELAY) {

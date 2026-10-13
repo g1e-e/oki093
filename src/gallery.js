@@ -22,11 +22,15 @@ function render(items) {
     const h = document.createElement("h2");
     h.textContent = cat.label;
     col.appendChild(h);
+    const scroller = document.createElement("div");
+    scroller.className = "scroller";
+    col.appendChild(scroller);
+    scroller.addEventListener("scroll", schedule, { passive: true });
     if (!list.length) {
       const empty = document.createElement("div");
       empty.className = "empty";
       empty.textContent = "Nothing here yet.";
-      col.appendChild(empty);
+      scroller.appendChild(empty);
     }
     list.forEach((item, index) => {
       const tile = document.createElement("button");
@@ -41,7 +45,7 @@ function render(items) {
         img.width = item.w;
         img.height = item.h;
       }
-      img.addEventListener("load", () => img.classList.add("loaded"));
+      img.addEventListener("load", () => { img.classList.add("loaded"); schedule(); });
       img.src = item.url;
       tile.appendChild(img);
       if (item.title) {
@@ -51,13 +55,51 @@ function render(items) {
         tile.appendChild(cap);
       }
       tile.addEventListener("click", () => openLightbox(list, index));
-      col.appendChild(tile);
+      scroller.appendChild(tile);
     });
     columnsEl.appendChild(col);
   }
   notice.classList.add("hidden");
   columnsEl.classList.remove("hidden");
+  schedule();
 }
+
+const mobileQuery = window.matchMedia("(max-width: 800px)");
+let frame = 0;
+
+function schedule() {
+  if (!frame) frame = requestAnimationFrame(update);
+}
+
+function update() {
+  frame = 0;
+  const mobile = mobileQuery.matches;
+  for (const scroller of columnsEl.querySelectorAll(".scroller")) {
+    const tiles = scroller.querySelectorAll(".tile");
+    if (mobile) {
+      tiles.forEach((t) => { t.style.removeProperty("--s"); t.style.removeProperty("--o"); t.classList.remove("focus"); });
+      continue;
+    }
+    const box = scroller.getBoundingClientRect();
+    const center = box.top + box.height / 2;
+    const half = Math.max(box.height / 2, 1);
+    let best = null;
+    let bestDist = Infinity;
+    tiles.forEach((t) => {
+      const r = t.getBoundingClientRect();
+      const d = Math.abs(r.top + r.height / 2 - center);
+      const k = Math.min(d / half, 1);
+      t.style.setProperty("--s", (1.04 - 0.12 * k).toFixed(4));
+      t.style.setProperty("--o", (1 - 0.4 * k).toFixed(4));
+      if (d < bestDist) { bestDist = d; best = t; }
+    });
+    tiles.forEach((t) => t.classList.toggle("focus", t === best));
+    if (best) best.style.setProperty("--s", "1.08");
+  }
+}
+
+window.addEventListener("resize", schedule);
+mobileQuery.addEventListener("change", schedule);
 
 function openLightbox(list, index) {
   current = { list, index };

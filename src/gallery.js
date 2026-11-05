@@ -14,7 +14,7 @@ function showNotice(text, error) {
 }
 
 const loops = [];
-const mobileQuery = window.matchMedia("(max-width: 800px)");
+const mobileQuery = window.matchMedia("not all");
 const reducedQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 const SPEEDS = [22 * 0.9, -22, 22 * 1.1];
 const RESUME_DELAY = 250;
@@ -263,7 +263,37 @@ function tick(now) {
     updateHover();
     popStep(loop, dt);
   }
+  updatePopLayer();
   requestAnimationFrame(tick);
+}
+
+const popLayer = document.createElement("img");
+popLayer.className = "pop-layer";
+popLayer.alt = "";
+document.body.appendChild(popLayer);
+let ghost = null;
+
+function updatePopLayer() {
+  let best = null;
+  for (const t of document.querySelectorAll(".scroller .tile")) if (t._a > 0 && (!best || t._a > best._a)) best = t;
+  if (ghost && ghost !== best) { ghost.classList.remove("ghost"); ghost = null; }
+  if (!best || lightbox.classList.contains("open")) { popLayer.style.display = "none"; if (ghost) { ghost.classList.remove("ghost"); ghost = null; } return; }
+  const img = best.querySelector("img");
+  const r = best.getBoundingClientRect();
+  const vw = document.documentElement.clientWidth;
+  const pad = 8;
+  let left = r.left;
+  if (r.width <= vw - pad * 2) left = Math.min(Math.max(left, pad), vw - pad - r.width);
+  else left = (vw - r.width) / 2;
+  if (popLayer.getAttribute("src") !== img.currentSrc && img.currentSrc) popLayer.src = img.currentSrc || img.src;
+  popLayer.style.display = "block";
+  popLayer.style.left = `${left}px`;
+  popLayer.style.top = `${r.top}px`;
+  popLayer.style.width = `${r.width}px`;
+  popLayer.style.height = `${r.height}px`;
+  popLayer.style.opacity = String(Math.min(1, best._a * 4));
+  best.classList.add("ghost");
+  ghost = best;
 }
 
 function rebuildAll() {

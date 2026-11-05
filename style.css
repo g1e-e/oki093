@@ -25,6 +25,7 @@ header.site h1 { margin: 0; font-weight: 200; letter-spacing: 0.45em; font-size:
 .lb-next { right: 8px; top: 50%; transform: translateY(-50%); }
 @media (max-width: 800px) {
   .columns { grid-template-columns: 1fr; gap: 40px; padding: 0 16px 48px; }
+  body.gallery .columns { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; padding: 0 2.5vw; }
 }
 .admin { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
 .panel { border: 1px solid #1f1f1f; border-radius: 8px; padding: 22px; margin-bottom: 26px; background: #070707; }
@@ -60,10 +61,7 @@ body.gallery .column h2 { flex: 0 0 auto; }
 @media (hover: hover) { .scroller .tile.popped { z-index: 5; box-shadow: 0 30px 80px rgba(255, 255, 255, 0.12), 0 14px 40px rgba(0, 0, 0, 0.95); } .scroller .tile:hover img { transform: none; } }
 .scroller .tile img { overflow: hidden; }
 @media (max-width: 800px) {
-  body.gallery { height: auto; overflow: auto; display: block; }
-  body.gallery .column { height: auto; }
-  .scroller { overflow: visible; padding: 0; -webkit-mask-image: none; mask-image: none; }
-  .scroller .tile { transform: none; opacity: 1; }
+  body.gallery .column h2 { font-size: 10px; letter-spacing: 0.15em; }
   @media (hover: hover) { .scroller .tile.popped { z-index: 5; box-shadow: 0 30px 80px rgba(255, 255, 255, 0.12), 0 14px 40px rgba(0, 0, 0, 0.95); } .scroller .tile:hover img { transform: none; } }
 }
 body.gallery .tile { margin: 0; vertical-align: top; } body.gallery .tile img { vertical-align: top; } body.gallery .scroller .tile .caption { display: none; }
@@ -73,3 +71,8 @@ body.gallery .tile { margin: 0; vertical-align: top; } body.gallery .tile img { 
 .reload-btn:hover,.reload-btn:focus-visible{opacity:1;color:#fff}
 .reload-btn.spinning svg{animation:reload-spin .8s linear infinite}
 @keyframes reload-spin{to{transform:rotate(360deg)}}
+body.gallery .columns { width: 100%; max-width: none; gap: 0; padding: 0 2.5vw; box-sizing: border-box; }
+body.gallery .scroller { padding: 0; }
+body.gallery .scroller .tile.ghost img { opacity: 0 !important; }
+body.gallery .scroller .tile.popped { box-shadow: none; }
+.pop-layer { position: fixed; display: none; z-index: 30; pointer-events: none; object-fit: cover; box-shadow: 0 30px 80px rgba(255, 255, 255, 0.12), 0 14px 40px rgba(0, 0, 0, 0.95); }
